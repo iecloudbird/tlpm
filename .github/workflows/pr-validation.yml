@@ -1,0 +1,45 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate PR title
+        uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Example: Enforce titles like "feat: ...", "fix: ...", etc.
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            test
+            chore
+          requireScope: false # Set to true if you want scopes like "feat(auth): ..."
+          subjectPattern: ^[A-Z].+$ # Enforces titles starting with a capital letter
+
+      - name: Check PR body and changes
+        run: |
+          # Ensure PR has a description
+          if [ -z "${{ github.event.pull_request.body }}" ]; then
+            echo "Error: PR description is empty."
+            exit 1
+          fi
+          # Ensure PR has changes (not empty)
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          CHANGED_FILES=$(git diff --name-only FETCH_HEAD HEAD)
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "Error: PR contains no changes."
+            exit 1
+          fi

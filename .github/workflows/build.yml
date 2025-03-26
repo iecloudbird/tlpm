@@ -1,0 +1,32 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20" # Use the Node version your project requires
+          cache: "npm" # Caches npm dependencies for faster runs
+
+      - name: Install dependencies
+        run: npm ci # Use npm ci for a clean install
+
+      - name: Build Next.js app
+        run: npm run build # Assumes your package.json has a "build" script
+
+      - name: Run tests
+        run: npm test # Optional: Add this if you have tests; skip if no
+        if: success() # Only runs if the build succeeds
